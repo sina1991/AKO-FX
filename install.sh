@@ -40,7 +40,7 @@ if ! command -v python3 >/dev/null || ! command -v git >/dev/null; then
     source /etc/os-release
     [[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]] || { echo 'Automatic bootstrap supports Ubuntu 24.04 only.' >&2; exit 1; }
     apt-get update
-    apt-get install -y python3 git ca-certificates
+    apt-get install -y --no-remove python3 git ca-certificates
 fi
 python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
 source_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)

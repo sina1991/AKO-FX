@@ -104,7 +104,10 @@ def certificate_valid(cert, key, domain):
     cert, key = Path(cert), Path(key)
     if not cert.is_file() or not key.is_file():
         return False
-    if run(['openssl', 'x509', '-in', cert, '-noout', '-checkhost', domain], check=False).returncode:
+    host_check = run(['openssl', 'x509', '-in', cert, '-noout', '-checkhost', domain],
+                     check=False, env=dict(os.environ, LC_ALL='C'))
+    # OpenSSL 3.0 can exit zero on hostname mismatch; require its affirmative result.
+    if host_check.returncode or f'Hostname {domain} does match certificate' not in host_check.stdout:
         return False
     if run(['openssl', 'x509', '-in', cert, '-noout', '-checkend', '86400'], check=False).returncode:
         return False
@@ -389,7 +392,7 @@ class Installer:
         if 'docker' in self.missing: packages += ['docker.io', 'docker-compose-v2']
         packages += [p for p in ('nginx', 'openssl', 'certbot') if p in self.missing]
         run(['apt-get', 'update'])
-        run(['apt-get', 'install', '-y', *packages])
+        run(['apt-get', 'install', '-y', '--no-remove', *packages])
         if self.docker is None:
             run(['systemctl', 'enable', '--now', 'docker'])
             self.docker = Docker('unix:///var/run/docker.sock')

@@ -234,6 +234,9 @@ class RealCertificate(unittest.TestCase):
     def test_wrong_domain(self): self.assertFalse(ins.certificate_valid(self.cert,self.key,'other.example.com'))
     def test_invalid_key(self):
         with self.assertRaises(ins.InstallError): ins.find_certificate('x.30na.top',self.cert,self.cert)
+    def test_openssl_zero_exit_mismatch_is_not_accepted(self):
+        with patch.object(ins,'run',return_value=result('Hostname other.example.com does NOT match certificate\n',0)):
+            self.assertFalse(ins.certificate_valid(self.cert,self.key,'other.example.com'))
     def test_no_certificate_in_empty_directory(self):
         self.assertIsNone(ins.find_certificate('x.30na.top',base=self.base/'absent'))
 
