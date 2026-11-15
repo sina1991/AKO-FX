@@ -39,8 +39,8 @@ def main():
         position=request('/api/broker/accounts/'+account+'/positions',{'symbol':'EURUSD','side':'buy','quantity':100},token)['id']
         request('/api/admin/scenario',{'scenario':'up'},token)
         assert request('/api/broker/positions/'+position+'/close',{},token)['pnl_cents']==550
-        request('/api/prop/purchases',{'plan_id':'starter'},token)
-    assert request('/api/wallet',token=token)['balance_cents']==140000
+        request('/api/prop/purchases',{'plan_id':'b-10000'},token)
+    assert request('/api/wallet',token=token)['balance_cents']==140200
     assert len(request('/api/accounts',token=token)['accounts'])==2
     state=json.loads(Path('/etc/ako-fx/install.json').read_text())
     assert state['stage']=='complete'

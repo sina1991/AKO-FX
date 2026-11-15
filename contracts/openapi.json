@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "AKO-FX Demo API",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "DEMO ONLY. Integer cents in responses; synthetic prices, no live execution."
   },
   "paths": {
@@ -827,7 +827,14 @@
                     "enum": [
                       "EURUSD",
                       "GBPUSD",
-                      "USDJPY"
+                      "USDJPY",
+                      "XAUUSD",
+                      "XAGUSD",
+                      "BTCUSD",
+                      "USOIL",
+                      "UKOIL",
+                      "US30",
+                      "NAS100"
                     ]
                   },
                   "side": {
@@ -840,7 +847,17 @@
                   "quantity": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 100000
+                    "maximum": 1000000000
+                  },
+                  "stop_loss": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Optional synthetic price, at most four decimals"
+                  },
+                  "take_profit": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Optional synthetic price, at most four decimals"
                   }
                 },
                 "required": [
@@ -1024,8 +1041,20 @@
                   "plan_id": {
                     "type": "string",
                     "enum": [
-                      "starter",
-                      "advanced"
+                      "a-1000",
+                      "a-2500",
+                      "a-5000",
+                      "a-10000",
+                      "a-25000",
+                      "a-50000",
+                      "b-1000",
+                      "b-2500",
+                      "b-5000",
+                      "b-10000",
+                      "b-25000",
+                      "b-50000",
+                      "b-100000",
+                      "b-200000"
                     ]
                   }
                 },
@@ -1117,6 +1146,365 @@
             }
           }
         ]
+      }
+    },
+    "/api/prop/rules": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/api/admin/prop/requests": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/api/admin/prop/accounts": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/api/prop/accounts/{id}/requests": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "transition",
+                      "payout",
+                      "refund20",
+                      "reset",
+                      "extend",
+                      "growth",
+                      "merge"
+                    ]
+                  },
+                  "other_account_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prop/requests/{id}": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "approve",
+                      "reject",
+                      "reset",
+                      "fail"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 1000
+                  },
+                  "checks": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "boolean"
+                    }
+                  },
+                  "slippage_exempt": {
+                    "type": "boolean"
+                  },
+                  "source_conflict_ack": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prop/accounts/{id}/flag": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "record",
+                      "fail",
+                      "fail_owner"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prop/settings": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "broker_timezone": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/broker/positions/{id}/protection": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "409": {
+            "description": "Rule requirement or review conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stop_loss": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "take_profit": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

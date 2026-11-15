@@ -9,7 +9,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from ako_fx.application import dispatch, route
-from ako_fx.store import Error, init
+from ako_fx.store import Error, init, transaction
 
 LOG=logging.getLogger('ako')
 WEB=Path(__file__).resolve().parent/'web'
@@ -109,9 +109,23 @@ def main(argv=None):
     logging.basicConfig(level=logging.INFO)
     init()
     server=Server((args.host,args.port or PORTS.get(args.service,8080)),args.service)
+    stop=threading.Event()
+    def rule_clock():
+        from ako_fx.services.prop import sweep
+        while not stop.wait(15):
+            try:
+                with transaction() as db: sweep(db)
+            except Exception: LOG.exception('Prop deadline monitor failed')
+    monitor=None
+    if args.service in ('wallet','all'):
+        monitor=threading.Thread(target=rule_clock,name='prop-deadlines',daemon=True)
+        monitor.start()
     LOG.info('AKO-FX DEMO_ONLY service=%s address=%s',args.service,server.server_address)
     try: server.serve_forever()
     except KeyboardInterrupt: pass
-    finally: server.server_close()
+    finally:
+        stop.set()
+        if monitor: monitor.join(timeout=5)
+        server.server_close()
 
 if __name__=='__main__': main()

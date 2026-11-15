@@ -2,6 +2,7 @@
 import os
 import tempfile
 import threading
+from datetime import datetime,timezone
 from unittest.mock import patch
 from playwright.sync_api import sync_playwright, expect
 from ako_fx.server import Server
@@ -9,7 +10,8 @@ from ako_fx.services.identity import register
 from ako_fx.store import init, transaction
 
 def run():
-    with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ,{'AKO_DB':tmp+'/ui.db'}):
+    clock=[int(datetime(2026,11,16,12,tzinfo=timezone.utc).timestamp())]
+    with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ,{'AKO_DB':tmp+'/ui.db'}), patch('ako_fx.services.prop.now',side_effect=lambda:clock[0]):
         init()
         with transaction() as db: register(db,{'email':'admin@example.com','password':'Admin-password-123'},'admin')
         server=Server(('127.0.0.1',0),'all'); thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
@@ -46,11 +48,37 @@ def run():
                 page.locator('#accounts button').filter(has_text='بستن').click();idle()
                 page.locator('#plans button').first.click();idle()
                 assert page.locator('#accounts article').count()==2
+                # Exercise the A stage-1 lifecycle through UI, using a fixture clock only.
+                for day in range(5):
+                    if day: clock[0]+=86400
+                    card=page.locator('#accounts article').filter(has_text='30nA-Prop')
+                    card.locator('input[name=quantity]').fill('2000' if day==4 else '1')
+                    card.locator('button').filter(has_text='باز کردن معامله دمو').click();idle()
+                    if day==4:
+                        page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                        login('admin@example.com','Admin-password-123')
+                        page.locator('#scenario-up').click();idle()
+                        page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                        login('trader@example.com','Trader-password-123')
+                    clock[0]+=31
+                    page.locator('#accounts article').filter(has_text='30nA-Prop').locator('button').filter(has_text='بستن').click();idle()
+                card=page.locator('#accounts article').filter(has_text='30nA-Prop')
+                assert 'awaiting_review' in card.inner_text()
+                card.locator('button').filter(has_text='درخواست مرحله بعد').click();idle()
+                page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                login('admin@example.com','Admin-password-123')
+                review=page.locator('#propreviews .row').first
+                review.locator('input[name=reason]').fill('Verified paper identity and all policy checks')
+                for check in review.locator('input[type=checkbox]').all()[:6]:check.check()
+                review.locator('button').filter(has_text='ثبت تصمیم').click();idle()
+                page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                login('trader@example.com','Trader-password-123')
+                assert 'مرحله 2' in page.locator('#accounts article').filter(has_text='30nA-Prop').inner_text()
                 page.set_viewport_size({'width':390,'height':844})
                 assert page.locator('html').evaluate('(el) => el.scrollWidth <= window.innerWidth')
                 assert not errors,errors
                 browser.close()
-                print('Browser PASS: registration, funding request, admin approval, wallet, broker deposit, open/close, prop purchase, mobile overflow, JS errors')
+                print('Browser PASS: registration, funding request, admin approval, wallet, broker deposit, open/close, prop purchase, five trading days, target lock, manual stage approval, mobile overflow, JS errors')
         finally: server.shutdown();server.server_close();thread.join()
 
 if __name__=='__main__': run()

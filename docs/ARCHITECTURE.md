@@ -49,7 +49,7 @@ BEGIN IMMEDIATE، foreign keys، WAL و busy timeout از هم‌زمانی تر
 
 رزرو هر position برابر حداکثر ارزش مصنوعی آن در سقف بازه است؛ این رزرو، زیان بدترین تغییر مجاز برای long و short را پوشش می‌دهد. `PnL cents = floor(signed price difference × quantity / 100)`. Spread، leverage، commission، order book، slippage، pending order و market feed در این نسخه وجود ندارد.
 
-Prop پس از پرداخت هزینه، سرمایه مستقل دریافت می‌کند. سرمایه Prop به Wallet انتقال نمی‌یابد. زیان کل ۱۰٪ از سرمایه اولیه، شامل PnL باز، حساب را failed می‌کند و positionها اتمی بسته می‌شوند. سود ۱۰٪ فقط با positionهای بسته موجب passed می‌شود. passed/failed نهایی‌اند. daily drawdown، payout و مراحل چندگانه در این نسخه تعریف نشده‌اند.
+**رفتار تاریخی فقط برای حساب‌های legacy-0.1:** Prop پس از پرداخت هزینه، سرمایه مستقل دریافت می‌کند. سرمایه Prop به Wallet انتقال نمی‌یابد. زیان کل ۱۰٪ از سرمایه اولیه، شامل PnL باز، حساب را failed می‌کند و positionها اتمی بسته می‌شوند. سود ۱۰٪ فقط با positionهای بسته موجب passed می‌شود. passed/failed نهایی‌اند. daily drawdown، payout و مراحل چندگانه در این نسخه تعریف نشده‌اند.
 
 ## هویت و اجرا
 
@@ -62,3 +62,13 @@ Application server از Python stdlib استفاده می‌کند؛ reverse pro
 install.sh از Nginx میزبان استفاده می‌کند و فایل مستقل AKO-FX را اضافه می‌کند. Compose تولیدشده فقط پنج سرویس برنامه دارد؛ Caddy در آن وجود ندارد. Gateway به شبکه internal و یک Bridge مخصوص host-access متصل است و فقط به 127.0.0.1 bind می‌شود. این اتصال دوم، نقص انتشار پورت Gateway روی شبکه صرفاً internal را برطرف می‌کند. Compose دستی نیز برای Gateway همین اتصال دوم را دارد.
 
 HTTPS در پورت آزاد از 8443 و backend در پورت آزاد از 9080 تنظیم می‌شود. Host شامل شماره پورت به backend منتقل می‌شود تا کنترل Origin و ورود وب درست کار کند. نصب‌کننده فقط Nginx را پس از nginx -t reload می‌کند؛ daemon و certificateهای پروژه قبلی بازپیکربندی نمی‌شوند. daemon انتخاب‌شده و volume در state ذخیره می‌شوند تا resume داده را در Docker context دیگری از ابتدا ایجاد نکند.
+
+## نسخه 0.2 — قرارداد Prop A/B
+
+توصیف تک‌مرحله‌ای ۱۰٪/۱۰٪ بالا فقط رفتار legacy-0.1 است. خریدهای جدید، قرارداد JSON ثابت از prop_rules.py، stage و cycle مستقل، روزهای بروکر، metadata معاملات، events و درخواست‌های بررسی ادمین دارند. مرحله ۱ و ۲ به funded-demo منتهی می‌شوند؛ مرحله بعد خودکار صادر نمی‌شود.
+
+محاسبه balance در قواعد شامل اعتبار آزاد و reserve است؛ Equity شامل PnL باز هم هست. DD در هر quote و timer کنترل می‌شود. preflight در تراکنش مستقل، تخلف را پیش از درخواست احتمالا ناموفق ثبت می‌کند تا rollback درخواست به معنی حذف breach نباشد. Wallet process هر ۱۵ ثانیه sweep می‌کند و startup مجدد از state پایدار ادامه می‌دهد.
+
+انتقال سود/ریفاند به Wallet، مصرف درخواست و شمار پرداخت در همان transaction اتمی‌اند. مفتاح Idempotency-Key و قفل درخواست pending از دوپرداختی جلوگیری می‌کنند. migration فقط جدول اضافه می‌کند؛ position قدیمی بدون metadata همچنان رزرو قدیمی را آزاد می‌کند.
+
+[تطبیق، قیود دستی و تعارض‌های مرجع](PROP_RULES.md). هویت/کپی/ربات/VPS اجرای تریدر به بررسی مستند ادمین نیاز دارند و کشف خودکار آنها ادعا نمی‌شود.
