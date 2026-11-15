@@ -72,3 +72,5 @@ Job `installer-host` در [run شماره ۵](https://github.com/sina1991/AKO-FX
 در همان run، ۴۳ تست، Compose config و Docker build موفق بودند؛ بخش browser به‌علت انتقال `ubuntu-latest` به Ubuntu 26.04 و ناسازگاری Playwright قفل‌شده متوقف شد. runner تست به Ubuntu 24.04 تثبیت شد. این خطا مربوط به آماده‌سازی ابزار مرورگر بود و job نصب واقعی موفق ماند.
 
 بررسی روی Ubuntu 24.04 تفاوت OpenSSL 3.0 در exit status بررسی hostname را آشکار کرد. نصب‌کننده اکنون علاوه بر exit code، نتیجه مثبت صریح hostname را الزامی می‌کند؛ تست regression برای mismatch با exit code صفر اضافه شد.
+
+تست مرورگر از assertion استاندارد locator برای انتظار پایان درخواست‌ها استفاده می‌کند؛ اجرای eval رشته‌ای که توسط CSP مسدود می‌شد حذف شده و CSP محصول ضعیف نشده است.
