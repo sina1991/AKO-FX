@@ -15,7 +15,7 @@ def run():
         server=Server(('127.0.0.1',0),'all'); thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         try:
             with sync_playwright() as p:
-                browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+                browser=p.chromium.launch(executable_path=os.environ.get('AKO_CHROMIUM'),headless=True,args=['--no-sandbox'])
                 page=browser.new_page(viewport={'width':1440,'height':1000})
                 errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
                 page.goto('http://127.0.0.1:'+str(server.server_port))

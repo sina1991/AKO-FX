@@ -40,14 +40,14 @@ python3 -m compileall -q ako_fx
 node --check ako_fx/web/app.js
 ```
 
-Browser journey اختیاری در tests/browser_acceptance.py وجود دارد؛ به playwright و Chromium نیاز دارد:
+Browser journey اختیاری در tests/browser_acceptance.py وجود دارد؛ به playwright و Chromium نیاز دارد. CI آن‌ها را نصب می‌کند؛ برای مرورگر نصب‌شده سیستم می‌توان AKO_CHROMIUM=/usr/bin/chromium را تعیین کرد:
 
 ```bash
 clear
 PYTHONPATH=. python3 tests/browser_acceptance.py
 ```
 
-CI تعریف شده تا unittest، compile، Compose config و Docker build را بررسی کند. تعریف workflow به معنی اجرای موفق آن نیست؛ نتیجه هر run در GitHub Actions مرجع است.
+CI تعریف شده تا unittest، compile، Compose config، Docker build و گردش مرورگر را بررسی کند. تعریف workflow به معنی اجرای موفق آن نیست؛ نتیجه هر run در GitHub Actions مرجع است.
 
 ## محدوده تحویل
 
