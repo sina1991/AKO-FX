@@ -30,7 +30,7 @@ def main():
     key=a.key or uuid.uuid4().hex
     if method=='POST' and not path.startswith('/api/auth/'):
         print('Idempotency-Key: '+key,file=sys.stderr)
-    req=urllib.request.Request(a.url.rstrip('/')+path,data=json.dumps(payload).encode() if method=='POST' else None,headers={'Content-Type':'application/json','Authorization':'Bearer '+a.token,'Idempotency-Key':key},method=method)
+    req=urllib.request.Request(a.url.rstrip('/')+path,data=json.dumps(payload,ensure_ascii=False).encode() if method=='POST' else None,headers={'Content-Type':'application/json','Authorization':'Bearer '+a.token,'Idempotency-Key':key},method=method)
     try:
         with urllib.request.urlopen(req,timeout=20) as response: print(json.dumps(json.load(response),indent=2,ensure_ascii=False))
     except urllib.error.HTTPError as e:

@@ -46,7 +46,7 @@ def run():
                 assert '500.00' in page.locator('#accounts').inner_text()
                 page.locator('#accounts form').nth(1).locator('button').click();idle()
                 page.locator('#accounts button').filter(has_text='بستن').click();idle()
-                page.locator('#plans button').first.click();idle()
+                page.locator('#plans button').filter(has_text='خرید با اعتبار آزمایشی').first.click();idle()
                 assert page.locator('#accounts article').count()==2
                 # Exercise the A stage-1 lifecycle through UI, using a fixture clock only.
                 for day in range(5):

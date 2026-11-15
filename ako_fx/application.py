@@ -2,12 +2,12 @@ from ako_fx import __version__
 import hashlib
 import re
 from ako_fx.store import Error, transaction, once
-from ako_fx.services import identity, wallet, broker, prop
+from ako_fx.services import identity, wallet, broker, prop, dashboard
 
 ROLES={'identity','wallet','broker','prop','all'}
 
 def route(method,path):
-    if path.startswith('/api/auth/') or path=='/api/me': return 'identity'
+    if path.startswith('/api/auth/') or path=='/api/me' or path.startswith('/api/dashboard/'): return 'identity'
     if path.startswith('/api/wallet') or path.startswith('/api/admin/'): return 'wallet'
     if path.startswith('/api/prop'): return 'prop'
     if path.startswith('/api/broker') or path=='/api/accounts': return 'broker'
@@ -33,6 +33,7 @@ def dispatch(method,path,data,token='',key='',role='all'):
             return {'logged_out':True}
         if method=='GET':
             if path=='/api/me': return user
+            if path=='/api/dashboard/layout': return dashboard.load(db,user)
             if path=='/api/wallet': return wallet.snapshot(db,user)
             if path=='/api/accounts': return {'accounts':broker.accounts(db,user)}
             if path=='/api/prop/plans': return {'plans':prop.PLANS,'rules_version':prop.VERSION}
@@ -48,6 +49,7 @@ def dispatch(method,path,data,token='',key='',role='all'):
                 return {'events':[dict(r) for r in db.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 500')]}
         if method=='POST':
             def execute():
+                if path=='/api/dashboard/layout': return dashboard.save(db,user,data)
                 if path=='/api/admin/prop/settings': return prop.settings(db,user,data)
                 match=re.fullmatch(r'/api/admin/prop/requests/([a-f0-9]{32})',path)
                 if match: return prop.decide(db,user,match[1],data)

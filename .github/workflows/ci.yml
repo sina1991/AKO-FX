@@ -18,6 +18,7 @@ jobs:
       - run: python -m pip install playwright==1.56.0
       - run: python -m playwright install --with-deps chromium
       - run: PYTHONPATH=. python tests/browser_acceptance.py
+      - run: PYTHONPATH=. python tests/browser_workspace.py
   installer-host:
     runs-on: ubuntu-24.04
     timeout-minutes: 20

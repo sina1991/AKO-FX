@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "AKO-FX Demo API",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "DEMO ONLY. Integer cents in responses; synthetic prices, no live execution."
   },
   "paths": {
@@ -1503,6 +1503,101 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/dashboard/layout": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner revision and layout"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "revision",
+                  "layout"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "layout": {
+                    "type": "object",
+                    "description": "Owner-only items/slots/saved; max 96 KiB. See DASHBOARD_WORKSPACE.md",
+                    "properties": {
+                      "items": {
+                        "type": "object",
+                        "maxProperties": 200
+                      },
+                      "slots": {
+                        "type": "array",
+                        "maxItems": 24,
+                        "items": {
+                          "type": "object"
+                        }
+                      },
+                      "saved": {
+                        "type": "array",
+                        "maxItems": 5,
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New revision and validated layout"
+          },
+          "400": {
+            "description": "Invalid layout"
+          },
+          "403": {
+            "description": "Admin binding forbidden"
+          },
+          "409": {
+            "description": "Stale revision"
+          },
+          "413": {
+            "description": "Layout or transport quota exceeded"
           }
         }
       }

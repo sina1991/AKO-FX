@@ -73,3 +73,9 @@ python3 -m ako_fx.cli POST /api/prop/purchases --data '{"plan_id":"b-10000"}'
 python3 -m ako_fx.cli POST /api/prop/accounts/ACCOUNT_ID/requests --data '{"kind":"transition"}'
 python3 -m ako_fx.cli GET /api/admin/prop/requests
 ```
+
+## چیدمان و اسلات‌های نسخه 0.3
+
+`GET /api/dashboard/layout` ← `{revision, layout}` و `POST /api/dashboard/layout` ← `{revision, layout}` با Idempotency-Key. API در domain Identity سرو می‌شود. owner از Bearer Session تعیین می‌شود و scope کاربر دیگری پذیرفته نمی‌شود.
+
+layout شامل `items` (appearance اسلات‌ها)، `slots` (note/mirror) و `saved` (تا پنج قالب شخصی) است. note متن ساده، mirror فقط binding نمایشی یک بخش مجاز است. هیچ‌یک حساب/معامله ایجاد یا حذف نمی‌کنند. نسخه هم‌زمان قدیمی 409، appearance نامعتبر 400، binding ادمین برای user عادی 403 و payload بیش‌ازحد 413 می‌دهد. [جزئیات و نمونه CLI](DASHBOARD_WORKSPACE.md).
