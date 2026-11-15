@@ -136,3 +136,5 @@ bash /tmp/ako-fx-install.sh --domain ako.example.com \
 ## پذیرش و محدودیت آزمون
 
 [گزارش پذیرش](ACCEPTANCE.md) نتایج واقعی را ثبت می‌کند. تست‌های واحد از عملیات سیستم mock می‌سازند؛ smoke job جدا روی Ubuntu 24.04 برای Docker/Nginx/TLS واقعی و اجرای دوباره با حفظ داده تعریف شده است. اجرای موفق تست واحد، معادل اجرای موفق روی VPS شما یا تأیید Production نیست.
+
+بررسی نهایی HTTPS پس از reload منتظر آماده‌شدن listener می‌ماند و Connection refused گذرا را تا ۱۵ ثانیه retry می‌کند. خطای certificate از این retry معاف نیست و نصب را متوقف می‌کند.

@@ -11,12 +11,13 @@ Read README.md, docs/ARCHITECTURE.md, docs/API.md and docs/ACCEPTANCE.md before 
 - All account and position actions verify ownership. Admin promotion is local management only.
 - No default credentials. No secrets in source, logging, issue text or tests.
 - Preserve independent role routing and the single-host shared SQLite constraint. Do not describe this release as isolated databases or distributed microservices.
+- Versioned Prop accounts use prop_contracts snapshots and two reviewed phases before funded-demo. Read docs/PROP_RULES.md and contracts/prop-rules-v1.json. Never rewrite rules for existing legacy accounts or bypass pending-request locks, recorded breaches or review checks.
 - Prop capital cannot be withdrawn to the wallet. Final passed/failed statuses are terminal. Failed positions settle atomically when scenarios trigger loss thresholds.
 
 ## Map
 
 - ako_fx/store.py: schema, transaction, ledger, audit and idempotency.
-- ako_fx/services/: identity, wallet, broker and prop domain behavior.
+- ako_fx/services/: identity, wallet, broker and prop domain behavior; prop_rules.py holds the dated source catalogue.
 - ako_fx/application.py: authorization-aware operations and role routing.
 - ako_fx/server.py: bounded request body, HTTP handling, static UI and gateway.
 - ako_fx/cli.py: API client; ako_fx/manage.py: local bootstrap and backup.

@@ -506,6 +506,19 @@ class Installer:
                     if path == '/' and b'AKO' not in body:
                         raise InstallError('HTTPS did not return the AKO-FX login page')
 
+    def wait_https(self):
+        # nginx reload acknowledges the signal before new workers bind the new port.
+        # Retry only transient readiness errors; never suppress certificate failures.
+        last=None
+        for _ in range(15):
+            try:
+                self.verify_https()
+                return
+            except (ConnectionRefusedError,TimeoutError) as error:
+                last=error
+                time.sleep(1)
+        raise InstallError(f'HTTPS listener did not become ready: {last}')
+
     def backup(self):
         if not self.existing_data: return
         filename = 'pre-install-' + str(time.time_ns()) + '.db'
@@ -614,7 +627,7 @@ class Installer:
         self.deploy_nginx(self.site,self.enabled,
                           nginx_config(self.domain,self.port,self.backend,*map(safe_path,self.cert_pair)))
         self.save(nginx_sha256=sha256(self.site),stage='verifying')
-        self.verify_https()
+        self.wait_https()
         if shutil.which('ufw'):
             status=run(['ufw','status']).stdout
             if re.search(r'^Status: active$',status,re.MULTILINE):

@@ -43,6 +43,9 @@ class Acceptance(unittest.TestCase):
         aid=self.call('POST','/api/broker/accounts')['id']
         self.call('POST','/api/broker/accounts/'+aid+'/transfers',{'amount':value,'direction':'deposit'})
         return aid
+    def legacy_prop(self):
+        from ako_fx.services.prop import legacy_purchase
+        with transaction() as db: return legacy_purchase(db,self.user,'starter')
     def test_authorization_and_identity(self):
         self.assertEqual(self.user['role'],'user')
         self.error(401,'GET','/api/wallet',token='bad')
@@ -91,7 +94,7 @@ class Acceptance(unittest.TestCase):
         self.assertEqual((a['balance_cents'],a['reserved_cents']),(100000,0))
     def test_prop_fee_capital_and_terminal_failure(self):
         self.funded('1000')
-        bought=self.call('POST','/api/prop/purchases',{'plan_id':'starter'})
+        bought=self.legacy_prop()
         aid=bought['id']
         self.assertEqual(self.call('GET','/api/wallet')['balance_cents'],90000)
         self.error(409,'POST','/api/broker/accounts/'+aid+'/transfers',{'amount':'1','direction':'withdraw'})
@@ -105,7 +108,7 @@ class Acceptance(unittest.TestCase):
         self.assertEqual(self.call('POST','/api/prop/accounts/'+aid+'/evaluate')['status'],'failed')
         self.error(409,'POST','/api/broker/accounts/'+aid+'/positions',{'symbol':'EURUSD','side':'buy','quantity':1})
     def test_prop_pass_requires_realized_target(self):
-        self.funded('1000'); aid=self.call('POST','/api/prop/purchases',{'plan_id':'starter'})['id']
+        self.funded('1000'); aid=self.legacy_prop()['id']
         pid=self.call('POST','/api/broker/accounts/'+aid+'/positions',{'symbol':'EURUSD','side':'buy','quantity':6000})['id']
         for _ in range(4): self.call('POST','/api/admin/scenario',{'scenario':'up'},token=self.admin_token)
         self.assertEqual(self.call('GET','/api/accounts')['accounts'][0]['status'],'active')
@@ -167,7 +170,7 @@ class MultiService(unittest.TestCase):
                     token=req('/api/auth/login',{'email':'gateway@example.com','password':'Gateway-password-123'})['token']
                     self.assertEqual(req('/api/wallet',token=token)['balance_cents'],0)
                     self.assertIn('id',req('/api/broker/accounts',{},token))
-                    self.assertEqual(len(req('/api/prop/plans',token=token)['plans']),2)
+                    self.assertEqual(len(req('/api/prop/plans',token=token)['plans']),14)
                     self.assertEqual(req('/api/accounts',token=token)['accounts'][0]['kind'],'broker')
             finally:
                 for server in servers: server.shutdown();server.server_close()

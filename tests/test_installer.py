@@ -171,6 +171,17 @@ class InstallerLogic(unittest.TestCase):
         obj=ins.Installer(self.args,root=self.root)
         obj.save(owner='AKO-FX installer v1',domain='other.example.com')
         with self.environment(),self.assertRaisesRegex(ins.InstallError,'domain'): obj.preflight()
+    def test_https_reload_readiness_is_retried(self):
+        obj=ins.Installer(self.args,root=self.root)
+        with patch.object(obj,'verify_https',side_effect=[ConnectionRefusedError(),None]) as verify,patch.object(ins.time,'sleep'):
+            obj.wait_https()
+            self.assertEqual(verify.call_count,2)
+    def test_https_certificate_failure_is_not_hidden_by_retry(self):
+        import ssl
+        obj=ins.Installer(self.args,root=self.root)
+        with patch.object(obj,'verify_https',side_effect=ssl.SSLCertVerificationError('wrong certificate')) as verify:
+            with self.assertRaises(ssl.SSLCertVerificationError):obj.wait_https()
+            self.assertEqual(verify.call_count,1)
     def test_remote_docker_endpoint_refused(self):
         with self.assertRaises(ins.InstallError): ins.Docker('ssh://host')
     def test_docker_environment_cannot_redirect_selected_daemon(self):
