@@ -1,0 +1,62 @@
+x-domain: &domain
+  image: ako-fx:0.1.0
+  build: .
+  restart: unless-stopped
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  tmpfs: [/tmp]
+  volumes: [ako-data:/data]
+  networks: [internal]
+  environment:
+    AKO_DB: /data/ako.db
+  healthcheck:
+    test: [CMD, python, -c, "import urllib.request,os; urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('HEALTH_PORT','8080')+'/health',timeout=3)"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+services:
+  identity:
+    <<: *domain
+    command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, identity]
+    environment: {AKO_DB: /data/ako.db, HEALTH_PORT: '8101'}
+  wallet:
+    <<: *domain
+    command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, wallet]
+    environment: {AKO_DB: /data/ako.db, HEALTH_PORT: '8102'}
+  broker:
+    <<: *domain
+    command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, broker]
+    environment: {AKO_DB: /data/ako.db, HEALTH_PORT: '8103'}
+  prop:
+    <<: *domain
+    command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, prop]
+    environment: {AKO_DB: /data/ako.db, HEALTH_PORT: '8104'}
+  gateway:
+    <<: *domain
+    command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, gateway]
+    environment: {AKO_DB: /data/ako.db, AKO_IDENTITY_HOST: identity, AKO_WALLET_HOST: wallet, AKO_BROKER_HOST: broker, AKO_PROP_HOST: prop}
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      identity: {condition: service_healthy}
+      wallet: {condition: service_healthy}
+      broker: {condition: service_healthy}
+      prop: {condition: service_healthy}
+  proxy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      AKO_DOMAIN: ${AKO_DOMAIN:?Set AKO_DOMAIN in .env}
+    volumes: ["./deploy/Caddyfile:/etc/caddy/Caddyfile:ro", "caddy-data:/data", "caddy-config:/config"]
+    networks: [internal, public]
+    depends_on: [gateway]
+volumes:
+  ako-data:
+  caddy-data:
+  caddy-config:
+networks:
+  internal: {internal: true}
+  public:

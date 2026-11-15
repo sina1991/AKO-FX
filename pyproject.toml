@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ako-fx"
+version = "0.1.0"
+description = "Demo-only wallet, broker and prop platform"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+ako = "ako_fx.cli:main"
+ako-server = "ako_fx.server:main"
+ako-manage = "ako_fx.manage:main"
+
+[tool.setuptools.packages.find]
+include = ["ako_fx*"]
+
+[tool.setuptools.package-data]
+ako_fx = ["web/*.html", "web/*.js", "web/*.css"]

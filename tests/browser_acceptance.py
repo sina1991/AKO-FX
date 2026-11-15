@@ -1,0 +1,56 @@
+"""Optional real-browser acceptance. Requires playwright and Chromium."""
+import os
+import tempfile
+import threading
+from unittest.mock import patch
+from playwright.sync_api import sync_playwright
+from ako_fx.server import Server
+from ako_fx.services.identity import register
+from ako_fx.store import init, transaction
+
+def run():
+    with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ,{'AKO_DB':tmp+'/ui.db'}):
+        init()
+        with transaction() as db: register(db,{'email':'admin@example.com','password':'Admin-password-123'},'admin')
+        server=Server(('127.0.0.1',0),'all'); thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        try:
+            with sync_playwright() as p:
+                browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+                page=browser.new_page(viewport={'width':1440,'height':1000})
+                errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+                page.goto('http://127.0.0.1:'+str(server.server_port))
+                def login(email,password,register=False):
+                    page.locator('#authform input[name=email]').fill(email)
+                    page.locator('#authform input[name=password]').fill(password)
+                    page.locator('#authform button[value='+('register' if register else 'login')+']').click()
+                    page.locator('#dashboard').wait_for(state='visible')
+                    page.locator('#refresh').wait_for(state='visible')
+                    page.wait_for_function("!document.querySelector('#refresh').disabled")
+                def idle(): page.wait_for_function("!document.querySelector('#refresh').disabled")
+                login('trader@example.com','Trader-password-123',True)
+                page.locator('#fundingform input').fill('2000')
+                page.locator('#fundingform button').click();idle()
+                assert 'pending' in page.locator('#requests').inner_text()
+                page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                login('admin@example.com','Admin-password-123')
+                page.locator('#adminrequests button').filter(has_text='تأیید').click();idle()
+                assert 'approved' in page.locator('#adminrequests').inner_text()
+                page.locator('#logout').click();page.locator('#auth').wait_for(state='visible');idle()
+                login('trader@example.com','Trader-password-123')
+                assert '2,000.00' in page.locator('#balance').inner_text()
+                page.locator('#newaccount').click();idle()
+                page.locator('#accounts form').first.locator('input').fill('500')
+                page.locator('#accounts form').first.locator('button').click();idle()
+                assert '500.00' in page.locator('#accounts').inner_text()
+                page.locator('#accounts form').nth(1).locator('button').click();idle()
+                page.locator('#accounts button').filter(has_text='بستن').click();idle()
+                page.locator('#plans button').first.click();idle()
+                assert page.locator('#accounts article').count()==2
+                page.set_viewport_size({'width':390,'height':844})
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                assert not errors,errors
+                browser.close()
+                print('Browser PASS: registration, funding request, admin approval, wallet, broker deposit, open/close, prop purchase, mobile overflow, JS errors')
+        finally: server.shutdown();server.server_close();thread.join()
+
+if __name__=='__main__': run()
