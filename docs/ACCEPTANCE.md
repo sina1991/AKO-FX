@@ -64,3 +64,9 @@ install.sh، راهنمای INSTALLER.md و helper مدیریتی به پروژ�
 CI job مستقل installer-host روی Ubuntu 24.04 تعریف شده است: یک سایت TLS قبلی روی 443 می‌سازد، certificate مورداعتماد محلی را در مسیر 30na-dashboard قرار می‌دهد، installer را با Docker/Nginx واقعی اجرا می‌کند، یک wallet و دو حساب ایجاد می‌کند، دوباره نصب را بدون رمز اجرا می‌کند و حفظ داده، admin، backup و سایت قبلی را بررسی می‌کند. تست TLS این job از CA آزمایشی استفاده می‌کند؛ صدور عمومی Let's Encrypt در آن آزمایش نمی‌شود.
 
 اجرای installer روی VPS کاربر و مسیر عمومی اینترنت از این محیط انجام نشده است. هیچ ادعای تأیید Production اضافه نشده است. نتایج مشاهده‌شده CI پس از اجرا مرجع پذیرش host هستند.
+
+### نتیجه مشاهده‌شده آزمون نصب واقعی در CI
+
+Job `installer-host` در [run شماره ۵](https://github.com/sina1991/AKO-FX/actions/runs/43743388104/job/132901258314) موفق شد: نصب واقعی پنج container روی Ubuntu 24.04، انتشار `127.0.0.1:9080`، HTTPS روی `8443` با certificate معتبر fixture، گردش wallet/Broker/Prop، backup سازگار و اجرای دوباره با حفظ admin و داده‌ها بررسی شدند. hash فایل سایت قبلی و پاسخ آن روی 443 نیز حفظ شدند.
+
+در همان run، ۴۳ تست، Compose config و Docker build موفق بودند؛ بخش browser به‌علت انتقال `ubuntu-latest` به Ubuntu 26.04 و ناسازگاری Playwright قفل‌شده متوقف شد. runner تست به Ubuntu 24.04 تثبیت شد. این خطا مربوط به آماده‌سازی ابزار مرورگر بود و job نصب واقعی موفق ماند.

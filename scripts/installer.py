@@ -293,9 +293,9 @@ class Installer:
         missing = [x for x in ('docker', 'nginx', 'openssl', 'certbot') if not shutil.which(x)]
         self.domain = domain
         self.missing = missing
-        self.commit = run(['git', '-C', self.source, 'rev-parse', 'HEAD']).stdout.strip()
+        self.commit = run(['git', '-c', 'safe.directory='+str(self.source), '-C', self.source, 'rev-parse', 'HEAD']).stdout.strip()
         if not re.fullmatch('[a-f0-9]{40}', self.commit): raise InstallError('Invalid source commit')
-        if run(['git', '-C', self.source, 'status', '--porcelain', '--untracked-files=no']).stdout.strip():
+        if run(['git', '-c', 'safe.directory='+str(self.source), '-C', self.source, 'status', '--porcelain', '--untracked-files=no']).stdout.strip():
             raise InstallError('Tracked source files are modified. Use a clean checkout or the GitHub bootstrap command.')
         self.containers, self.volume, self.existing_data = [], 'ako-fx_ako-data', False
         if 'docker' not in missing:
@@ -405,7 +405,7 @@ class Installer:
         release.parent.mkdir(parents=True, exist_ok=True)
         staging = Path(tempfile.mkdtemp(prefix='.release-', dir=release.parent))
         try:
-            files = run(['git', '-C', self.source, 'ls-files', '-z']).stdout.split('\0')
+            files = run(['git', '-c', 'safe.directory='+str(self.source), '-C', self.source, 'ls-files', '-z']).stdout.split('\0')
             for relative in filter(None, files):
                 origin = self.source / relative
                 if origin.is_symlink() or '..' in Path(relative).parts or Path(relative).is_absolute():

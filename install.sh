@@ -44,7 +44,7 @@ if ! command -v python3 >/dev/null || ! command -v git >/dev/null; then
 fi
 python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
 source_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-if [[ -f "$source_root/scripts/installer.py" && -f "$source_root/ako_fx/server.py" ]] && git -C "$source_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if [[ -f "$source_root/scripts/installer.py" && -f "$source_root/ako_fx/server.py" ]] && git -c "safe.directory=$source_root" -C "$source_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     python3 "$source_root/scripts/installer.py" "${args[@]}"
 else
     bootstrap_dir=$(mktemp -d /tmp/ako-fx-bootstrap.XXXXXXXX)
