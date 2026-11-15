@@ -11,14 +11,14 @@ window.AkoWorkspace=class {
   document.addEventListener('pointerdown',e=>{if(!this.menu.contains(e.target))this.close();if(e.pointerType==='touch'&&this.active()&&!e.target.closest('input,textarea,select,button,a')){const x=e.clientX,y=e.clientY;this.longPress={x,y,timer:setTimeout(()=>{this.open(x,y,e.target.closest('[data-slot-key]'));this.longPress=null;},650)};}});
   document.addEventListener('pointermove',e=>{if(this.longPress&&Math.hypot(e.clientX-this.longPress.x,e.clientY-this.longPress.y)>12)this.cancelPress();});
   document.addEventListener('pointerup',()=>this.cancelPress());document.addEventListener('pointercancel',()=>this.cancelPress());
-  window.addEventListener('resize',()=>this.close());window.addEventListener('scroll',e=>{if(!this.menu.contains(e.target)&&!this.dialog.contains(e.target))this.close();},true);
+  window.addEventListener('resize',()=>this.close());document.addEventListener('wheel',e=>{if(!this.menu.contains(e.target)&&!this.dialog.contains(e.target))this.close();},{passive:true});
   this.dialog.addEventListener('close',()=>this.focusOrigin());
  }
  active(){return !!this.owner&&!document.getElementById('dashboard').hidden;}
  cancelPress(){if(this.longPress)clearTimeout(this.longPress.timer);this.longPress=null;}
  async load(user,force=false){if(this.owner===user.id&&!force)return;this.clear();const response=await this.hooks.api('/api/dashboard/layout');this.owner=user.id;this.revision=response.revision;this.layout=response.layout;this.user=user;}
  clear(){this.close();if(this.dialog.open)this.dialog.close();this.dialog.replaceChildren();this.menu.replaceChildren();this.owner=null;this.user=null;this.origin=null;this.originKey=null;this.registry.clear();this.history=[];this.layout={items:{},slots:[],saved:[]};this.revision=0;document.getElementById('custom-slots')?.replaceChildren();}
- focusOrigin(){if(!this.owner)return;const current=this.origin?.isConnected?this.origin:this.registry.get(this.originKey)?.el?.querySelector(':scope > .slot-chrome .slot-menu-trigger')||document.querySelector('#workspace-tools button');current?.focus();}
+ focusOrigin(){if(!this.owner)return;const current=this.origin?.isConnected?this.origin:this.registry.get(this.originKey)?.el?.querySelector(':scope > .slot-chrome .slot-menu-trigger')||document.querySelector('#workspace-tools button');current?.focus({preventScroll:true});}
  close(focus=false){this.menu.hidden=true;for(const b of document.querySelectorAll('.slot-menu-trigger'))b.setAttribute('aria-expanded','false');if(focus)this.focusOrigin();}
  style(key){return this.layout.items[key]||{};}
  async change(fn,{force=false}={}){
@@ -38,7 +38,7 @@ window.AkoWorkspace=class {
  submit(form,text,fn){const b=this.element('button',text);b.type='submit';form.append(b);form.onsubmit=e=>{e.preventDefault();this.run(async()=>{try{await fn();this.dialog.close();}catch(error){let alert=form.querySelector('[role=alert]');if(!alert){alert=this.element('p',undefined,'error');alert.setAttribute('role','alert');form.append(alert);}alert.textContent=error.message;throw error;}});};}
  confirm(title,description,fn){this.modal(title,f=>{f.append(this.element('p',description));this.submit(f,'تأیید',fn);});}
  textDialog(title,label,value,save,multiline=false){this.modal(title,f=>{const input=this.input(f,label,value,{multiline,maxLength:multiline?2000:100});this.submit(f,'ذخیره',()=>save(input.value));});}
- copy(text){if(navigator.clipboard?.writeText)return navigator.clipboard.writeText(text);this.modal('متن قابل کپی',f=>{const input=this.input(f,'متن را انتخاب و کپی کنید',text,{multiline:true,maxLength:2000});input.readOnly=true;});}
+ async copy(text){if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(text);return;}catch{}}this.modal('متن قابل کپی',f=>{const input=this.input(f,'متن را انتخاب و کپی کنید',text,{multiline:true,maxLength:2000});input.readOnly=true;});}
  sourceEntry(key){const custom=this.layout.slots.find(s=>s.id===key);return this.registry.get(custom?.kind==='mirror'?custom.source:key);}
  actions(key){const entry=this.sourceEntry(key);if(!entry)return[];return [...entry.el.querySelectorAll('button')].filter(b=>!b.classList.contains('slot-menu-trigger')&&b.closest('[data-slot-key]')===entry.el).map(b=>({label:b.textContent.trim(),disabled:b.disabled,fn:()=>{this.reveal(entry.key);b.scrollIntoView({block:'center'});const form=b.closest('form');if(form){form.querySelector('input,select,textarea')?.focus();if(!form.reportValidity())return;}b.click();}}));}
  reveal(key){const entry=this.registry.get(key);if(!entry)return;entry.el.hidden=false;entry.el.classList.remove('slot-is-collapsed');entry.el.scrollIntoView({behavior:'smooth',block:'center'});entry.el.focus();}
@@ -89,7 +89,7 @@ window.AkoWorkspace=class {
   add('بازخوانی چیدمان از سرور',run(async()=>{const data=await this.hooks.api('/api/dashboard/layout');this.layout=data.layout;this.revision=data.revision;this.render();}));
   add('بازنشانی ظاهر همه اسلات‌ها',()=>this.confirm('بازنشانی ظاهر','رنگ، اندازه و چیدمان اسلات‌ها بازنشانی می‌شوند؛ یادداشت‌ها و حساب‌ها باقی می‌مانند.',()=>this.change(l=>{l.items={};})));
   this.menu.hidden=false;this.menu.style.left='0px';this.menu.style.top='0px';const rect=this.menu.getBoundingClientRect();this.menu.style.left=Math.max(8,Math.min(x,innerWidth-rect.width-8))+'px';this.menu.style.top=Math.max(8,Math.min(y,innerHeight-rect.height-8))+'px';
-  el?.querySelector(':scope > .slot-chrome .slot-menu-trigger')?.setAttribute('aria-expanded','true');this.menu.querySelector('[role=menuitem]:not(:disabled)')?.focus();
+  el?.querySelector(':scope > .slot-chrome .slot-menu-trigger')?.setAttribute('aria-expanded','true');this.menu.querySelector('[role=menuitem]:not(:disabled)')?.focus({preventScroll:true});
  }
  mount(el,index){
   const key=el.dataset.slotKey;const oldBody=el.querySelector(':scope > .slot-body');let body=oldBody;

@@ -83,7 +83,10 @@ def run():
     note=page.locator('#custom-slots .slot-note').locator('..').locator('..')
     note_key=note.get_attribute('data-slot-key')
     assert note_key
-    menu(note_key);choose('حذف اسلات از چیدمان');confirm()
+    menu(note_key)
+    page.evaluate('() => window.scrollBy(0,1)')
+    expect(page.locator('#workspace-menu')).to_be_visible()
+    choose('حذف اسلات از چیدمان');confirm()
     assert page.locator('#custom-slots .slot-note').count()==0
     global_menu();choose('واگردانی آخرین تغییر');idle()
     expect(page.locator('#custom-slots .slot-note')).to_have_text(secret)
