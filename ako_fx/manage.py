@@ -1,19 +1,32 @@
 import argparse
 import getpass
+import json
 import sqlite3
+import sys
 from ako_fx.store import init, transaction, Error
 from ako_fx.services.identity import register
 
-def main():
+
+def main(argv=None):
     p=argparse.ArgumentParser(description='Local administrative setup; never exposed over HTTP')
     sub=p.add_subparsers(dest='command',required=True)
     sub.add_parser('init')
-    admin=sub.add_parser('create-admin'); admin.add_argument('--email',required=True)
+    sub.add_parser('admin-status')
+    admin=sub.add_parser('create-admin')
+    admin.add_argument('--email',required=True)
+    admin.add_argument('--password-stdin',action='store_true',help='Read one password line from a private input stream')
     backup=sub.add_parser('backup'); backup.add_argument('destination')
-    args=p.parse_args(); init()
-    if args.command=='create-admin':
-        pw=getpass.getpass('Admin password (12+ characters): ')
-        if pw!=getpass.getpass('Repeat password: '): p.error('Passwords differ')
+    args=p.parse_args(argv); init()
+    if args.command=='admin-status':
+        with transaction() as db:
+            count=db.execute("SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0]
+        print(json.dumps({'count':count}))
+    elif args.command=='create-admin':
+        if args.password_stdin:
+            pw=sys.stdin.readline(1024).rstrip('\r\n')
+        else:
+            pw=getpass.getpass('Admin password (12+ characters): ')
+            if pw!=getpass.getpass('Repeat password: '): p.error('Passwords differ')
         try:
             with transaction() as db: print(register(db,{'email':args.email,'password':pw},role='admin'))
         except Error as e: p.error(str(e))

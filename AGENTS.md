@@ -21,6 +21,8 @@ Read README.md, docs/ARCHITECTURE.md, docs/API.md and docs/ACCEPTANCE.md before 
 - ako_fx/server.py: bounded request body, HTTP handling, static UI and gateway.
 - ako_fx/cli.py: API client; ako_fx/manage.py: local bootstrap and backup.
 - ako_fx/web/: Persian UI; compose.yaml and deploy/: single-VPS deployment.
+- install.sh and scripts/installer.py: root-only Ubuntu 24.04 bootstrap, Docker endpoint/volume adoption, verified TLS and owned Nginx files. Read docs/INSTALLER.md; never stop/reconfigure another daemon/site. Preserve existing admin and backup before update.
+- tests/test_installer.py: preflight, adoption, TLS validation and failure recovery. scripts/installer_smoke.sh: dedicated CI host only, never run on a user VPS.
 - tests/test_acceptance.py: deterministic API, integrity, concurrency and multi-service checks.
 - tests/browser_acceptance.py: optional real Chromium journey.
 

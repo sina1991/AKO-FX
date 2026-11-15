@@ -3,7 +3,7 @@ import os
 import tempfile
 import threading
 from unittest.mock import patch
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 from ako_fx.server import Server
 from ako_fx.services.identity import register
 from ako_fx.store import init, transaction
@@ -25,8 +25,8 @@ def run():
                     page.locator('#authform button[value='+('register' if register else 'login')+']').click()
                     page.locator('#dashboard').wait_for(state='visible')
                     page.locator('#refresh').wait_for(state='visible')
-                    page.wait_for_function("!document.querySelector('#refresh').disabled")
-                def idle(): page.wait_for_function("!document.querySelector('#refresh').disabled")
+                    expect(page.locator('#refresh')).to_be_enabled()
+                def idle(): expect(page.locator('#refresh')).to_be_enabled()
                 login('trader@example.com','Trader-password-123',True)
                 page.locator('#fundingform input').fill('2000')
                 page.locator('#fundingform button').click();idle()
@@ -47,7 +47,7 @@ def run():
                 page.locator('#plans button').first.click();idle()
                 assert page.locator('#accounts article').count()==2
                 page.set_viewport_size({'width':390,'height':844})
-                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                assert page.locator('html').evaluate('(el) => el.scrollWidth <= window.innerWidth')
                 assert not errors,errors
                 browser.close()
                 print('Browser PASS: registration, funding request, admin approval, wallet, broker deposit, open/close, prop purchase, mobile overflow, JS errors')
