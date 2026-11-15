@@ -41,14 +41,14 @@ class Handler(BaseHTTPRequestHandler):
                         raise Error('Cross-origin request rejected',403)
                 if self.headers.get('Content-Type','').split(';')[0]!='application/json':
                     raise Error('Content-Type must be application/json',415)
-            if self.command=='GET' and self.server.role in ('all','gateway') and path in ('/','/app.js','/style.css'):
-                filename={'/':'index.html','/app.js':'app.js','/style.css':'style.css'}[path]
-                ctype={'index.html':'text/html; charset=utf-8','app.js':'application/javascript; charset=utf-8','style.css':'text/css; charset=utf-8'}[filename]
+            if self.command=='GET' and self.server.role in ('all','gateway') and path in ('/','/app.js','/style.css','/workspace.js','/workspace.css'):
+                filename={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/workspace.js':'workspace.js','/workspace.css':'workspace.css'}[path]
+                ctype={'index.html':'text/html; charset=utf-8','app.js':'application/javascript; charset=utf-8','style.css':'text/css; charset=utf-8','workspace.js':'application/javascript; charset=utf-8','workspace.css':'text/css; charset=utf-8'}[filename]
                 return self.reply(200,(WEB/filename).read_bytes(),ctype)
             raw_length=self.headers.get('Content-Length','0')
             if not raw_length.isdecimal(): raise Error('Invalid Content-Length')
             length=int(raw_length)
-            if length>16384: raise Error('Request too large',413)
+            if length>(131072 if path=='/api/dashboard/layout' else 16384): raise Error('Request too large',413)
             raw=self.rfile.read(length) if length else b'{}'
             if len(raw)!=length and length: raise Error('Incomplete request')
             data=json.loads(raw)

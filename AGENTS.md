@@ -21,6 +21,9 @@ Read README.md, docs/ARCHITECTURE.md, docs/API.md and docs/ACCEPTANCE.md before 
 - ako_fx/application.py: authorization-aware operations and role routing.
 - ako_fx/server.py: bounded request body, HTTP handling, static UI and gateway.
 - ako_fx/cli.py: API client; ako_fx/manage.py: local bootstrap and backup.
+- ako_fx/services/dashboard.py: owner-only revisioned layout/note/template settings; strictly visual, no account deletion.
+- ako_fx/web/workspace.js and workspace.css: context menus and persistent slots. Preserve native input menus, role filtering, focus/keyboard/mobile behavior and logout cleanup. Duplicate is a read-only mirror; never duplicate a financial account or submit an action just by opening a menu.
+- tests/test_dashboard.py and tests/browser_workspace.py cover layout isolation and financial invariants.
 - ako_fx/web/: Persian UI; compose.yaml and deploy/: single-VPS deployment.
 - install.sh and scripts/installer.py: root-only Ubuntu 24.04 bootstrap, Docker endpoint/volume adoption, verified TLS and owned Nginx files. Read docs/INSTALLER.md; never stop/reconfigure another daemon/site. Preserve existing admin and backup before update.
 - tests/test_installer.py: preflight, adoption, TLS validation and failure recovery. scripts/installer_smoke.sh: dedicated CI host only, never run on a user VPS.

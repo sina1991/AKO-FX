@@ -67,6 +67,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS prop_one_pending ON prop_requests(account_id) 
 CREATE TABLE IF NOT EXISTS prop_payouts(id TEXT PRIMARY KEY,account_id TEXT REFERENCES accounts(id),gross INTEGER NOT NULL,net INTEGER NOT NULL,created INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS prop_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 INSERT OR IGNORE INTO prop_settings VALUES('broker_timezone','UTC');
+CREATE TABLE IF NOT EXISTS dashboard_layouts(user_id TEXT PRIMARY KEY REFERENCES users(id),revision INTEGER NOT NULL,config TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts(subject TEXT PRIMARY KEY,count INTEGER NOT NULL,reset_at INTEGER NOT NULL);
 ''')
 
