@@ -35,25 +35,40 @@ python3 -m ako_fx.server
 
 مرورگر: `http://127.0.0.1:8080`. با حساب جدید ثبت‌نام و اعتبار درخواست کنید؛ سپس با ادمین درخواست را تأیید کنید.
 
-## استقرار VPS
+## نصب کامل با install.sh — سازگار با سرور دارای پروژه قبلی
 
-Docker Engine و Compose plugin را نصب کنید و دامنه را به IP سرور متصل کنید. سپس:
-
-```bash
-clear
-cp .env.example .env
-nano .env
-```
-
-مقدار `AKO_DOMAIN` را دامنه واقعی قرار دهید. پورت‌های ورودی 80/443 باید باز باشند.
+روی **Ubuntu 24.04**، با کاربر root اجرا کنید:
 
 ```bash
 clear
-docker compose up -d --build
-docker compose exec identity python -m ako_fx.manage create-admin --email admin@example.com
+curl -fsSL https://raw.githubusercontent.com/sina1991/AKO-FX/main/install.sh -o /tmp/ako-fx-install.sh &&
+bash /tmp/ako-fx-install.sh --domain x.30na.top
 ```
 
-Dashboard در `https://YOUR_DOMAIN` در دسترس است. پورت‌های domain service روی IP عمومی منتشر نمی‌شوند. جزئیات نصب و backup در [راهنمای استقرار](docs/DEPLOYMENT.md).
+دامنه مثال را برای سرور دیگر تغییر دهید. نصب‌کننده کد را از GitHub دریافت و SHA را ثبت می‌کند، Docker/Compose و Nginx موجود را بررسی می‌کند، certificate معتبر دامنه را پیدا می‌کند و AKO-FX را روی **اولین پورت HTTPS آزاد از 8443** نصب می‌کند. Gateway فقط روی loopback و پورت آزاد از 9080 منتشر می‌شود. در پایان، آدرس ورود دقیق چاپ می‌شود؛ معمولاً `https://x.30na.top:8443`.
+
+در نصب فعلی، volume و ادمین از containerهای پروژه `ako-fx` شناسایی و حفظ می‌شوند. قبل از تغییر نسخه، از DB موجود backup سازگار گرفته می‌شود. اگر ادمین وجود نداشته باشد، ایمیل و رمز به‌صورت تعاملی دریافت می‌شود. نصب‌کننده Caddy دوم روی 80/443 راه‌اندازی نمی‌کند و سایت‌های موجود Nginx را بازنویسی نمی‌کند.
+
+اگر certificate موجود نباشد، نصب‌کننده email حساب Let's Encrypt را می‌پرسد و برای دامنه‌ای که site متعارض ندارد، certificate رایگان با Certbot webroot می‌گیرد. این مرحله به DNS صحیح و پورت عمومی 80 نیاز دارد. فقط در صورت نیاز، packageهای سیستم نصب می‌شوند؛ روی host دارای 30nA، Docker خراب/ناموجود با daemon تازه جایگزین نمی‌شود.
+
+برای بررسی اولیه بدون تغییر تنظیمات یا containerها:
+
+```bash
+clear
+bash /tmp/ako-fx-install.sh --domain x.30na.top --check-only
+```
+
+مدیریت پس از نصب:
+
+```bash
+clear
+sudo ako-fx status
+sudo ako-fx logs
+```
+
+اگر firewall پنل VPS فعال است، پورت HTTPS چاپ‌شده را مجاز کنید. UFW فعال به‌صورت خودکار برای همان پورت تنظیم می‌شود؛ UFW غیرفعال فعال نمی‌شود. [راهنمای کامل نصب، ادامه نصب و بازیابی](docs/INSTALLER.md).
+
+روش Docker Compose دستی برای مدیریت اختصاصی همچنان در [راهنمای استقرار](docs/DEPLOYMENT.md) موجود است؛ تنظیم نصب خودکار در `/etc/ako-fx/compose.json` قرار می‌گیرد.
 
 ## CLI
 

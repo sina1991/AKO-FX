@@ -54,3 +54,13 @@ CI تعریف شده تا unittest، compile، Compose config، Docker build و 
 گردش end-to-end دمو از ثبت‌نام تا کیف پول، Broker و Prop در سطح API پیاده و بررسی شده است. Web فارسی، CLI، قرارداد OpenAPI، Docker Compose، bootstrap ادمین، backup و راهنمای restore تحویل شده‌اند.
 
 استقلال DB، PostgreSQL، پردازش توزیع‌شده، payment واقعی، سفارش واقعی، feed بازار، مدل دقیق Forex، daily drawdown، MFA، بازیابی رمز، email verification، ابزار مدیریت پلن دلخواه و ممیزی مستقل Production در محدوده این نسخه نیستند. دو پلن و قواعد آن‌ها ثابت‌اند. محدودیت‌های معماری در ARCHITECTURE.md ثبت شده‌اند.
+
+## نصب‌کننده هم‌زیست با Nginx موجود — 2026-11-15
+
+install.sh، راهنمای INSTALLER.md و helper مدیریتی به پروژه اضافه شدند. نقص شبکه Gateway در Compose پیش‌فرض نیز اصلاح شد: Gateway علاوه بر internal به Bridge غیر internal متصل است.
+
+**نتیجه اجرای محلی: ۴۳ تست موفق**، به‌علاوه بررسی syntax اسکریپت‌های Bash و compile فایل‌های Python. مجموعه محلی شامل تست‌های قبلی و تست‌های installer برای انتخاب پورت، کنترل مالکیت config، حفظ volume/admin، pin کردن Docker daemon، جلوگیری از جایگزینی volume گم‌شده، rollback فایل Nginx در خطا، check-only بدون write، و تطابق واقعی certificate/key با OpenSSL است. تست‌های installer که سیستم را تغییر می‌دهند از mock استفاده می‌کنند؛ این‌ها نصب واقعی Linux نیستند.
+
+CI job مستقل installer-host روی Ubuntu 24.04 تعریف شده است: یک سایت TLS قبلی روی 443 می‌سازد، certificate مورداعتماد محلی را در مسیر 30na-dashboard قرار می‌دهد، installer را با Docker/Nginx واقعی اجرا می‌کند، یک wallet و دو حساب ایجاد می‌کند، دوباره نصب را بدون رمز اجرا می‌کند و حفظ داده، admin، backup و سایت قبلی را بررسی می‌کند. تست TLS این job از CA آزمایشی استفاده می‌کند؛ صدور عمومی Let's Encrypt در آن آزمایش نمی‌شود.
+
+اجرای installer روی VPS کاربر و مسیر عمومی اینترنت از این محیط انجام نشده است. هیچ ادعای تأیید Production اضافه نشده است. نتایج مشاهده‌شده CI پس از اجرا مرجع پذیرش host هستند.

@@ -36,6 +36,7 @@ services:
     environment: {AKO_DB: /data/ako.db, HEALTH_PORT: '8104'}
   gateway:
     <<: *domain
+    networks: [internal, public]
     command: [python, -m, ako_fx.server, --host, 0.0.0.0, --service, gateway]
     environment: {AKO_DB: /data/ako.db, AKO_IDENTITY_HOST: identity, AKO_WALLET_HOST: wallet, AKO_BROKER_HOST: broker, AKO_PROP_HOST: prop}
     ports: ["127.0.0.1:8080:8080"]

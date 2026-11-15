@@ -56,3 +56,9 @@ Prop پس از پرداخت هزینه، سرمایه مستقل دریافت م
 PBKDF2-SHA256 با salt تصادفی و 260000 دور؛ session token تصادفی است و فقط hash آن ذخیره می‌شود. Session هشت ساعت اعتبار دارد. Web token را فقط در حافظه نگه می‌دارد؛ refresh مرورگر نیازمند ورود مجدد است. CLI از Bearer token استفاده می‌کند. Admin فقط با فرمان تعاملی محلی ساخته می‌شود.
 
 Application server از Python stdlib استفاده می‌کند؛ reverse proxy برای TLS لازم است. محدودیت body و timeout و throttling ورود بر مبنای email وجود دارد. Rate limit مبتنی بر IP، MFA، بازیابی رمز، تأیید ایمیل و audit خارجی برای استقرار عمومی گسترده باید اضافه شوند. این نسخه ادعای Production acceptance ندارد.
+
+## نصب روی host مشترک
+
+install.sh از Nginx میزبان استفاده می‌کند و فایل مستقل AKO-FX را اضافه می‌کند. Compose تولیدشده فقط پنج سرویس برنامه دارد؛ Caddy در آن وجود ندارد. Gateway به شبکه internal و یک Bridge مخصوص host-access متصل است و فقط به 127.0.0.1 bind می‌شود. این اتصال دوم، نقص انتشار پورت Gateway روی شبکه صرفاً internal را برطرف می‌کند. Compose دستی نیز برای Gateway همین اتصال دوم را دارد.
+
+HTTPS در پورت آزاد از 8443 و backend در پورت آزاد از 9080 تنظیم می‌شود. Host شامل شماره پورت به backend منتقل می‌شود تا کنترل Origin و ورود وب درست کار کند. نصب‌کننده فقط Nginx را پس از nginx -t reload می‌کند؛ daemon و certificateهای پروژه قبلی بازپیکربندی نمی‌شوند. daemon انتخاب‌شده و volume در state ذخیره می‌شوند تا resume داده را در Docker context دیگری از ابتدا ایجاد نکند.

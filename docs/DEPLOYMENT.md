@@ -1,5 +1,7 @@
 # استقرار روی یک Linux VPS
 
+**روش پیشنهادی:** [install.sh و نصب بدون تداخل با Nginx موجود](INSTALLER.md). دستورهای این سند برای روش دستی‌اند. اگر با installer نصب کرده‌اید، به‌جای compose پیش‌فرض از `sudo ako-fx compose ...` استفاده کنید.
+
 پیش‌نیاز: Ubuntu 24.04 LTS یا Linux سازگار، Docker Engine با Compose plugin، Git، دامنه با DNS متصل به IP عمومی و پورت‌های 80/443 باز. نصب Docker در این مخزن خودکار نشده است.
 
 ## دریافت و بررسی
